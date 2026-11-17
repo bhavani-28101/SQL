@@ -1,0 +1,15 @@
+SELECT
+    ROUND(
+        SUM(Number * Frequency) / SUM(Frequency),
+        1
+    ) AS median
+FROM (
+    SELECT
+        Number,
+        Frequency,
+        SUM(Frequency) OVER (ORDER BY Number) AS cumulative,
+        SUM(Frequency) OVER () AS total
+    FROM Numbers
+) t
+WHERE cumulative >= total / 2
+  AND cumulative - Frequency <= total / 2;
