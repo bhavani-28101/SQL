@@ -1,0 +1,35 @@
+WITH RECURSIVE Numbers AS (
+    SELECT 0 AS num
+
+    UNION ALL
+
+    SELECT num + 1
+    FROM Numbers
+    WHERE num < (
+        SELECT COUNT(*)
+        FROM Transactions
+    )
+),
+VisitCounts AS (
+    SELECT
+        v.user_id,
+        v.visit_date,
+        COUNT(t.transaction_date) AS transactions_count
+    FROM Visits v
+    LEFT JOIN Transactions t
+        ON v.user_id = t.user_id
+        AND v.visit_date = t.transaction_date
+    GROUP BY v.user_id, v.visit_date
+)
+SELECT
+    n.num AS transactions_count,
+    COUNT(vc.user_id) AS visits_count
+FROM Numbers n
+LEFT JOIN VisitCounts vc
+    ON n.num = vc.transactions_count
+WHERE n.num <= (
+    SELECT COALESCE(MAX(transactions_count), 0)
+    FROM VisitCounts
+)
+GROUP BY n.num
+ORDER BY n.num;
